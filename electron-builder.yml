@@ -1,0 +1,110 @@
+appId: com.vpspilot.app
+productName: VPS Pilot
+copyright: Copyright © 2026 VPS Pilot
+
+directories:
+  output: release
+  buildResources: build
+
+# 关闭对 .gitignore 的自动读取。
+#
+# 这是个很隐蔽的坑：electron-builder 默认会把项目 .gitignore 里的规则
+# 一并当作打包排除规则，而我们的 .gitignore 里恰好有
+#     node_modules/  dist/  dist-electron/
+# 也就是「构建产物和依赖都不入库」这个再正常不过的约定。
+# 结果就是 files 里明明写了 dist/**/*，产物里却一个文件都没有，
+# 打出来的安装包能装、双击直接闪退 —— 极难排查。
+# 打包规则全部由下面的 files 显式声明，这里关掉自动读取。
+disableDefaultIgnoredFiles: true
+
+# 跳过原生模块重编译。
+#
+# 原因：ssh2 会把 cpu-features 作为可选依赖装上，用于加速加密计算；
+# 打包时 electron-builder 会尝试用 node-gyp 针对 Electron ABI 重编译它，
+# 而没有安装 Visual Studio 构建工具的机器会直接报
+# "Could not find any Visual Studio installation to use" 并中断打包。
+#
+# ssh2 在没有 cpu-features 时会自动回退到纯 JS 实现，功能完全一致
+# （仅极高频连接场景下加密速度略低），因此这里直接跳过重建。
+npmRebuild: false
+
+# 纳入打包的文件。
+#
+# 注意一：一旦显式声明 files，electron-builder 就不再套用默认规则，
+#        必须把「运行期真正需要的东西」全部列出来。漏掉 dist-electron
+#        就会出现「安装包能装、双击直接闪退」这种最难排查的问题。
+# 注意二：不要在这里用 {a,b,c} 花括号展开语法，electron-builder 底层用的
+#        glob 实现对此支持不稳定，写错一个就可能让整组规则失效。
+#
+# 踩过的坑：package.json 必须在 files 里！
+# asar 里没有 package.json 时，Electron 找不到应用入口，打包阶段本身
+# 就会报 "Application \"package.json\" in ...app.asar does not exist"，
+# 或者在旧版本里静默打出「能装、双击闪退」的坏包。
+files:
+  - package.json
+  - dist/**/*
+  - dist-electron/**/*
+  # MCP stdio 转发脚本。
+  # 外部客户端（ZCode 等）需要 node 直接执行这个文件，
+  # 所以它必须被打进产物，且要以真实文件形式存在 ——
+  # 因此下面 extraResources 再放一份到 asar 之外。
+  - scripts/vps-pilot-mcp.js
+
+  # 运行期依赖。显式声明 files 后默认规则失效，必须自己列。
+  - node_modules/**/*
+  # 排除规则逐条写，不用花括号（{a,b} 语法在 electron-builder 里不可靠）
+  - "!node_modules/**/*.md"
+  - "!node_modules/**/*.map"
+  - "!node_modules/**/*.ts"
+  - "!node_modules/**/test/**"
+  - "!node_modules/**/tests/**"
+  - "!node_modules/**/example/**"
+  - "!node_modules/**/examples/**"
+  - "!node_modules/**/docs/**"
+  - "!node_modules/.bin/**"
+  - "!node_modules/.cache/**"
+  # cpu-features 含原生 .node，已确定不使用，避免带进产物
+  - "!node_modules/cpu-features/**"
+
+# 把 stdio 转发脚本额外放一份到 asar 之外。
+#
+# 原因：MCP 客户端是拿「node <绝对路径>」去执行它的，
+# asar 包内的文件对普通 node 进程不是一个可执行的真实路径。
+# 放到 resources/scripts/ 下，node 才能正常 require 到它。
+#
+# 注意：这里只放「必须位于 asar 之外的运行期文件」。
+# 不要在这里写 node_modules —— 依赖是随 files 打进 asar 的，
+# extraResources 里的排除规则（!...）语义与 files 不同，
+# 混在一起会让依赖同时出现在两处，徒增体积且难以排查。
+extraResources:
+  - from: scripts/vps-pilot-mcp.js
+    to: scripts/vps-pilot-mcp.js
+
+# ssh2 内部带一个 pagent.exe，需要以真实文件形式存在，不能塞进 asar
+asarUnpack:
+  - "**/node_modules/ssh2/**"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-${version}-setup.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: VPS Pilot
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development

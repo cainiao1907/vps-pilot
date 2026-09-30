@@ -1,0 +1,38 @@
+# === 依赖 ===
+node_modules/
+
+# === 构建产物 ===
+dist/
+dist-electron/
+dist-installer/
+release/
+release-build/
+release-verify/
+release-final/
+release[0-9]/
+.vite/
+
+# === 本地环境 ===
+*.log
+.DS_Store
+Thumbs.db
+*.local
+__pycache__/
+*.pyc
+.vscode/*
+!.vscode/extensions.json
+
+# === 安全：禁止入库的本地敏感内容 ===
+# 采集报告（含真实主机 IP / hostId / 服务器内部细节）
+reports/
+# AI 协作记忆与本地配置（含真实主机、本机路径）
+.workbuddy-ai/
+# 运行期凭据存储（正常情况下位于 %APPDATA%，此处二次兜底）
+vpspilot-store.json
+vpspilot-audit.json
+*.pem
+*.ppk
+id_rsa*
+id_ed25519*
+.env
+.env.*

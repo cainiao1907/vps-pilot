@@ -1,0 +1,1169 @@
+/* ===== VPS Pilot 全局样式（暗色专业运维主题） =====
+ *
+ * 色板设计说明（别随手改主色饱和度）
+ *
+ * 这是一个「长时间盯屏」的运维工具，终端区域会占满大部分视野，
+ * 内容本身（日志、命令输出）已经是高信息密度的。所以 UI 的配色原则是
+ * **退到内容后面去**，而不是抢眼：
+ *
+ *   1. 主色（--accent）从 #58a6ff 降到 #4f8fd4。原色的明度太高，
+ *      在纯黑终端旁边会形成刺眼的光斑，长时间看容易疲劳。
+ *      降低饱和 + 降明度后仍能承担「当前选中/可点击」的信号职责。
+ *   2. 语义色承担**优先级区分**，不是装饰：
+ *        --ok     绿  = 连接正常、执行成功
+ *        --warn   黄  = 需要留意（未配置、只读自动放行）
+ *        --danger 红  = 破坏性操作、硬拦截
+ *      按钮的着色严格按这个语义走 —— 「主操作」用中性偏亮而不是绿色，
+ *      否则「保存」和「执行成功」的颜色撞在一起，用户会误读状态。
+ *   3. 背景用 5 级灰阶（bg-0 最深 → bg-4 最浅）表达层级，
+ *      终端区永远是最深的 bg-0，配置面板用 bg-1/bg-2。
+ *      这样用户一眼就能区分「我能在这里敲命令」和「这里是设置」。
+ */
+
+:root {
+  /* 灰阶：0 最深（终端）→ 4 最浅（浮层） */
+  --bg-0: #0b0f14;
+  --bg-1: #11161d;
+  --bg-2: #161b22;
+  --bg-3: #1b2129;
+  --bg-4: #21272f;
+  --bg-hover: #1e242c;
+  --bg-active: #252c35;
+
+  --border: #262d36;
+  --border-light: #1c2229;
+  --border-strong: #363d47;
+
+  --text-0: #e3e9ef;
+  --text-1: #aab4bf;
+  --text-2: #7f8a96;
+  --text-3: #5f6a75;
+
+  /* 主色：低饱和蓝，够用但不刺眼 */
+  --accent: #4f8fd4;
+  --accent-hover: #63a0e0;
+  --accent-dim: rgba(79, 143, 212, 0.14);
+  --accent-border: rgba(79, 143, 212, 0.42);
+
+  /* 语义色：功能优先，不做装饰 */
+  --ok: #3d9c52;
+  --ok-hover: #4bb862;
+  --ok-dim: rgba(61, 156, 82, 0.14);
+  --ok-border: rgba(61, 156, 82, 0.4);
+
+  --warn: #b8892a;
+  --warn-hover: #d0a03a;
+  --warn-dim: rgba(184, 137, 42, 0.14);
+  --warn-border: rgba(184, 137, 42, 0.4);
+
+  --danger: #c1443c;
+  --danger-hover: #d9554d;
+  --danger-dim: rgba(193, 68, 60, 0.14);
+  --danger-border: rgba(193, 68, 60, 0.42);
+
+  --info: #4a8bbf;
+  --info-dim: rgba(74, 139, 191, 0.14);
+
+  /* 兼容旧变量名：已有组件大量引用 --green/--red/--yellow/--purple，
+     直接映射到新语义色，避免一次性改几百处内联样式引入回归 */
+  --green: var(--ok);
+  --green-dim: var(--ok-dim);
+  --red: var(--danger);
+  --red-dim: var(--danger-dim);
+  --yellow: var(--warn);
+  --yellow-dim: var(--warn-dim);
+  --orange: var(--warn);
+  --orange-dim: var(--warn-dim);
+  --purple: #8b7bc4;
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+    'Hiragino Sans GB', sans-serif;
+
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+
+  /* z-index 层级体系 —— 全部集中在这里，不要再散落硬编码数字。
+     留出 100 的间隔，方便以后插层。 */
+  --z-layer: 1;      /* 内容层（工作区 / 各功能页） */
+  --z-rail: 10;      /* 左侧导航栏 */
+  --z-aside: 10;     /* 主机列表 */
+  --z-titlebar: 100; /* 标题栏：必须永远压在上面 */
+  --z-statusbar: 100;
+  --z-dropdown: 500; /* 下拉、气泡 */
+  --z-modal: 1000;   /* 模态框 */
+  --z-toast: 2000;   /* 提示条：最高 */
+}
+
+/* 尊重系统的「减少动态效果」设置 —— 运维工具常有用户开着这个偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c333c;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3d454f;
+  background-clip: padding-box;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* 统一的键盘焦点环。
+   用 :focus-visible 而不是 :focus —— 鼠标点击不应留下焦点环（视觉噪音），
+   但键盘 Tab 导航必须能看见当前在哪。这是可访问性的基本要求，
+   也是「运维工具用键盘比鼠标多」这个事实的体现。 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+/* 终端内部自己管理焦点表现，不要在外面再画一圈 */
+.xterm :focus-visible {
+  outline: none;
+}
+
+/* ===== 布局骨架 =====
+ *
+ * 三段式 + 常驻工作区。层级全靠 --z-* 变量，见文件顶部的 z-index 体系说明。
+ */
+
+/* 标题栏：常驻且永远在最上层。
+   用 WebkitAppRegion: drag 让整条可拖拽窗口，内部可交互元素必须显式
+   声明 no-drag，否则按钮点不动（Electron 的经典坑）。 */
+.titlebar {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  flex-shrink: 0;
+  position: relative;
+  z-index: var(--z-titlebar);
+  -webkit-app-region: drag;
+}
+.titlebar button,
+.titlebar input,
+.titlebar select,
+.titlebar a,
+.titlebar-meta {
+  -webkit-app-region: no-drag;
+}
+.titlebar-brand {
+  flex-shrink: 0;
+}
+.titlebar-logo {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.titlebar-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-2);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  cursor: default;
+}
+.titlebar-meta:hover {
+  background: var(--bg-3);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+.titlebar-meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 左侧一级导航 */
+.nav-rail {
+  width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 8px 6px;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  position: relative;
+  z-index: var(--z-rail);
+}
+.nav-rail-brand {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  user-select: none;
+}
+.nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  font-size: 10.5px;
+  line-height: 1.2;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.nav-item:hover {
+  background: var(--bg-3);
+  color: var(--text-0);
+}
+.nav-item:active {
+  transform: scale(0.96);
+}
+.nav-item.active {
+  background: var(--accent-dim);
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+/* 选中项左侧的指示条 —— 比整块变色更克制，也和标签栏的 active 下划线呼应 */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 18px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+.nav-item-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.nav-item-label {
+  white-space: nowrap;
+}
+.nav-item-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 5px var(--ok);
+}
+
+/* 主机列表：独立滚动，滚轮不会传到工作区 */
+.host-aside {
+  width: 264px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  position: relative;
+  z-index: var(--z-aside);
+  overscroll-behavior: contain;
+}
+
+/* 内容层：工作区与各功能页共用同一个 grid 单元格，靠显隐切换。
+   用 grid 而不是 absolute 定位，是为了让子元素能继续用 flex: 1 撑满高度。 */
+.layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  z-index: var(--z-layer);
+}
+/* 隐藏层：保留在 DOM 里（终端实例不销毁），但不可见、不可交互、不可聚焦 */
+.layer.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 功能页外壳：统一标题 + 标签栏 + 滚动区的三段结构 */
+.panel {
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-0);
+}
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  flex-shrink: 0;
+}
+.panel-title {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  margin-bottom: 3px;
+}
+.panel-sub {
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+/* 可滚动区域。
+   overscroll-behavior: contain 是关键 —— 阻止滚动到边界后继续向上冒泡，
+   否则鼠标在设置页滚到底再往下滚，会让背后的终端一起动。
+   overflow-anchor: none 让浏览器不要做滚动锚定（内容高度变化时会跳）。 */
+.scroll-panel {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+}
+
+/* 工作区标签栏 */
+.tabstrip {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-height: 36px;
+  overscroll-behavior: contain;
+}
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent;
+  color: var(--text-2);
+  white-space: nowrap;
+  margin-bottom: -1px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.tab-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+.tab-item.active {
+  background: var(--bg-0);
+  border-bottom-color: var(--accent);
+  color: var(--text-0);
+  font-weight: 500;
+}
+.tab-close {
+  padding: 0 3px;
+  font-size: 11px;
+  opacity: 0.45;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.tab-item:hover .tab-close {
+  opacity: 0.8;
+}
+.tab-close:hover {
+  opacity: 1;
+  color: var(--danger);
+}
+
+/* 主机列表项。
+   操作按钮默认隐藏、hover 才显形 —— 列表静止时极干净（一屏能扫完所有主机），
+   操作按钮又出现在鼠标已经停住的位置，命中成本最低。 */
+.host-item {
+  position: relative;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 3px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background 0.13s ease, border-color 0.13s ease, transform 0.1s ease;
+}
+.host-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+.host-item:active {
+  transform: scale(0.995);
+}
+.host-item.active {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+}
+/* 选中项左侧指示条，和导航栏呼应 */
+.host-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+.host-item-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  padding-left: 13px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.15s ease, max-height 0.15s ease;
+}
+.host-item:hover .host-item-actions,
+.host-item:focus-within .host-item-actions,
+.host-item.active .host-item-actions {
+  opacity: 1;
+  max-height: 40px;
+}
+/* 已连接状态：用语义绿描边而不是填充，保持列表整体克制的观感 */
+.btn-connected {
+  background: var(--ok-dim);
+  border-color: var(--ok-border);
+  color: var(--ok-hover);
+}
+.btn-connected:hover:not(:disabled) {
+  background: var(--ok-dim);
+  border-color: var(--ok);
+  color: var(--ok-hover);
+}
+
+/* 状态栏 */
+.statusbar {
+  height: 25px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-1);
+  font-size: 11px;
+  color: var(--text-3);
+  flex-shrink: 0;
+  position: relative;
+  z-index: var(--z-statusbar);
+}
+
+/* 提示条 */
+.toast {
+  position: fixed;
+  bottom: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 9px 18px;
+  font-size: 12.5px;
+  box-shadow: var(--shadow);
+  z-index: var(--z-toast);
+  animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* 分级提示：左侧色条表达「这是好消息还是坏消息」，一眼可辨 */
+.toast-ok {
+  border-left: 3px solid var(--ok);
+}
+.toast-err {
+  border-color: var(--danger-border);
+  border-left: 3px solid var(--danger);
+  color: var(--text-0);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text-0);
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+select {
+  cursor: pointer;
+}
+textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+/* ===== 按钮 =====
+ *
+ * 着色原则：**按钮颜色表达操作优先级，不表达状态**。
+ * 所以默认按钮是中性灰，只有「当前场景的主操作」才上色，
+ * 成功/失败这类状态由状态点、徽章、提示条承担 —— 避免语义串台。
+ *
+ * 四级层级：
+ *   .btn          默认（中性）—— 次级操作用这个
+ *   .btn-primary  主操作（场景里只能有一个）
+ *   .btn-accent   品牌色强调（新建、跳转）
+ *   .btn-danger   破坏性操作（删除、强制断开）
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 12.5px;
+  border: 1px solid var(--border);
+  background: var(--bg-3);
+  color: var(--text-1);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    transform 0.1s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+.btn:hover:not(:disabled) {
+  background: var(--bg-4);
+  border-color: var(--border-strong);
+  color: var(--text-0);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--ok);
+  border-color: var(--ok-border);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--ok-hover);
+  border-color: var(--ok);
+  color: #fff;
+}
+
+.btn-accent {
+  background: var(--accent);
+  border-color: var(--accent-border);
+  color: #fff;
+}
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger-border);
+  color: #fff;
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+  border-color: var(--danger);
+  color: #fff;
+}
+/* 次级危险操作：平时是中性按钮，hover 才变红。
+   用于「删除」这类不该抢视觉焦点、但必须能一眼认出的操作。 */
+.btn-danger-ghost {
+  background: transparent;
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.btn-danger-ghost:hover:not(:disabled) {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+  color: var(--danger-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-0);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11.5px;
+}
+.btn-icon {
+  padding: 6px;
+  width: 30px;
+  height: 30px;
+}
+
+/* ===== 通用 ===== */
+.row {
+  display: flex;
+  align-items: center;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.gap-4 { gap: 4px; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.flex-1 { flex: 1; }
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.muted {
+  color: var(--text-2);
+}
+.dim {
+  color: var(--text-3);
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 徽章 ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+/* 中性徽章：用于「内置」「AI Agent 运维」这类纯说明性标记，
+   不应该有颜色 —— 有颜色的徽章要留给真正的状态信号。 */
+.badge-muted {
+  background: var(--bg-3);
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ===== 空状态 ===== */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: var(--text-3);
+  text-align: center;
+  padding: 40px;
+}
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+/* ===== 模态框 ===== */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 12, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: fadeIn 0.14s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-title {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.modal-foot {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ===== 表单 ===== */
+.field {
+  margin-bottom: 14px;
+}
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.field-hint {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+.field-error {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--red);
+}
+
+/* ===== 标签页 ===== */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  padding: 0 12px;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+}
+.tab {
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.tab:hover {
+  color: var(--text-0);
+  background: var(--bg-hover);
+}
+.tab.active {
+  color: var(--text-0);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+/* 两列自适应网格：窄屏自动塌成单列，避免小窗口下挤压 */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* MCP 工具清单行：hover 时轻微左移，暗示它是一条可读的条目而非装饰 */
+.tool-row {
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.tool-row:hover {
+  background: var(--bg-3) !important;
+  transform: translateX(2px);
+}
+
+/* 能力开关行：hover 时标题变色，给出「可点」的反馈 */
+.toggle-row {
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background 0.15s ease;
+}
+.toggle-row:hover {
+  background: var(--bg-3);
+}
+
+/* ===== MCP 审批条 ===== */
+/* 固定在右下角，浮在一切之上 —— 外部 Agent 在等，用户必须看得见 */
+.mcp-approval {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: min(460px, calc(100vw - 36px));
+  z-index: var(--z-toast);
+  background: var(--bg-3);
+  border: 1px solid var(--warn-border);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  padding: 12px 14px;
+  animation: mcp-approval-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes mcp-approval-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mcp-approval-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.mcp-approval-body {
+  margin-bottom: 10px;
+}
+
+.mcp-approval-cmd {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 130px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.mcp-approval-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 风险徽标：颜色与风险等级对应，让用户一眼判断严重程度 */
+.mcp-risk {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.mcp-risk-low,
+.mcp-risk-safe {
+  color: var(--ok);
+  background: var(--ok-dim);
+  border-color: var(--ok-border);
+}
+.mcp-risk-medium {
+  color: var(--warn);
+  background: var(--warn-dim);
+  border-color: var(--warn-border);
+}
+.mcp-risk-high,
+.mcp-risk-critical {
+  color: var(--danger);
+  background: var(--danger-dim);
+  border-color: var(--danger-border);
+}
+
+/* 可点击卡片（如快捷入口）才有 hover 抬升；纯展示卡片加 hover 会误导用户 */
+.card[role='button']:hover:not(:disabled),
+button.card:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  background: var(--bg-3);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+button.card:active:not(:disabled) {
+  transform: translateY(0);
+}
+/* 主机概览的快捷入口卡片 */
+.quick-card {
+  text-align: left;
+  cursor: pointer;
+}
+.quick-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.quick-card-hl {
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+}
+
+/* ===== SFTP 文件表格行 ===== */
+.sftp-row:hover {
+  background: var(--bg-hover);
+}
+.sftp-row.selected {
+  background: var(--accent-dim);
+}
+
+/* ===== 技能选择弹窗里的行项 ===== */
+.picker-item {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-3);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.picker-item:hover {
+  border-color: var(--accent-border);
+  background: var(--bg-4);
+}
+.picker-item:active {
+  transform: scale(0.99);
+}
+.picker-item-on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.picker-item-on:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* ===== 加载动画 ===== */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulsing {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+/* ===== 技能内容预览 ===== */
+.skill-pre {
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 11px 13px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 340px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  color: var(--text-1);
+}
+
+/* ===== 终端容器 =====
+ *
+ * 注意：这里**绝对不能**给 .xterm 加 padding，也不要写 height: 100%。
+ *
+ * xterm.js 会在 .xterm 元素上做两件相互耦合的事：
+ *   1. 用 terminals 里的 .xterm-screen / .xterm-rows 绝对定位来排版字符网格；
+ *   2. FitAddon 通过测量 .xterm 父元素（也就是我们传进 term.open 的那个 div）
+ *      的 clientWidth / clientHeight，反推能放下多少行列。
+ *
+ * 一旦给 .xterm 自己加 padding，FitAddon 量到的是「含 padding 的外框」，
+ * 但实际能画字的是「内框」，两者差一圈 padding，算出来的行列数就会偏大；
+ * 同时 height: 100% 会让 .xterm 与 .xterm-viewport 的滚动区域互相打架，
+ * 表现为：终端一片空白 / 只画了一行 / 滚动条消失 / 光标跑到屏幕外。
+ *
+ * 正确做法：让 .xterm 完全撑满我们给它的容器，所有内边距交给外层 div 处理。
+ */
+.xterm {
+  height: 100%;
+  width: 100%;
+}
+/* xterm 的 helper 文本域必须始终可聚焦，否则键盘输入不会进终端 */
+.xterm .xterm-helper-textarea {
+  position: absolute;
+  opacity: 0;
+  left: -9999em;
+  top: 0;
+  width: 1em;
+  height: 1em;
+  z-index: -5;
+  white-space: nowrap;
+  overflow: hidden;
+  resize: none;
+  border: 0;
+  padding: 0;
+  outline: none;
+}
+.xterm-viewport {
+  /* 让滚动条更细、更贴合暗色主题 */
+  scrollbar-width: thin;
+}
+.xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: #2c333c;
+  border-radius: 6px;
+}
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #3d454f;
+}
+.xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 终端外层包裹：内边距放这里，而不是 .xterm 上 */
+.term-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 8px 4px 8px 10px;
+  overflow: hidden;
+  /* 终端自己接管滚轮 —— 滚到底不要传给外层 */
+  overscroll-behavior: contain;
+  outline: none;
+}
+/* 终端整体未聚焦时给一个视觉提示。
+   用低对比度的描边而不是改背景色：改背景会让终端内容看起来「变灰了」，
+   用户会误以为终端断开了。 */
+.term-wrap.unfocused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+  transition: box-shadow 0.15s ease;
+}
