@@ -1,11 +1,14 @@
 # VPS Pilot
 
+[![Release](https://img.shields.io/github/v/release/cainiao1907/vps-pilot?color=blue&label=release)](https://github.com/cainiao1907/vps-pilot/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/cainiao1907/vps-pilot/total?color=green)](https://github.com/cainiao1907/vps-pilot/releases)
 [![CI](https://github.com/cainiao1907/vps-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/cainiao1907/vps-pilot/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#快速开始)
 [![Electron](https://img.shields.io/badge/Electron-33-47848F.svg?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io/)
+
 
 > **VPS Pilot** —— 本地运行的 AI Agent 驱动 VPS 远程运维客户端。
 > 一个开源、可自托管的 SSH 终端 + 自主运维 Agent，支持 BYOK 接入任意大模型。
@@ -263,7 +266,16 @@ Agent 默认是一台「什么都会一点」的通用助手。真正干活时�
 
 ## 快速开始
 
-### 方式一：双击启动文件（推荐给不熟悉命令行的使用者）
+### 方式一：直接下载安装包（推荐，零配置）
+
+Windows 用户直接下载安装即可，**无需安装 Node.js**：
+
+👉 **[下载 VPS Pilot v0.1.0 安装包](https://github.com/cainiao1907/vps-pilot/releases/latest)**
+
+> ⚠️ 当前版本未做代码签名，Windows SmartScreen 可能提示「未知发布者」。
+> 点击「更多信息」→「仍要运行」即可。源码完全公开，可自行审查或从源码构建。
+
+### 方式二：双击启动文件（从源码运行）
 
 项目根目录有三个批处理文件，**双击即可**：
 
@@ -279,7 +291,7 @@ Agent 默认是一台「什么都会一点」的通用助手。真正干活时�
 
 > 仅需系统已安装 Node.js（https://nodejs.org）。脚本会自己检测，缺了会提示。
 
-### 方式二：命令行
+### 方式三：命令行
 
 ```bash
 npm install
