@@ -10,7 +10,7 @@
 
 1. 打开 https://github.com/cainiao1907/vps-pilot/upload/main/.github/workflows
    （若目录不存在，先访问 https://github.com/cainiao1907/vps-pilot/new/main 手动建 `.github/workflows/ci.yml`）
-2. 把本目录下的 `ci.yml` 内容粘贴进去
+2. 把本地 `.github/workflows/ci.yml` 的内容粘贴进去
 3. 提交即可
 
 ### 方式 B：补授权限后用命令行推送
