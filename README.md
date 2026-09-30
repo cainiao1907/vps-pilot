@@ -19,6 +19,20 @@
 
 **关键词 / Keywords**: SSH 客户端 · VPS 管理面板 · AI 运维 Agent · 自然语言运维 · 自动化部署 · 危险命令拦截 · 服务器管理工具 · MCP Server · Model Context Protocol · Electron 桌面应用 · 多模型 BYOK · 跳板机 · SFTP · 代理隧道 · DevOps 自动化
 
+## 界面预览
+
+### 主机管理 · 配置详情 · 一键诊断
+
+![主机管理](docs/screenshots/host-manager.png)
+
+多主机清单、连接配置、凭据加密存储，以及随时可跑的「一键诊断」链路检查。
+
+### 交互式终端 · AI Agent 执行审批
+
+![终端与 Agent](docs/screenshots/terminal-agent.png)
+
+左侧是完整的 xterm.js 交互终端，右下角是 AI Agent 的**执行审批条** —— 每条命令都带风险等级、目标主机与完整命令内容，批准才会经 SSH 发到服务器。
+
 ## 为什么做这个
 
 现有的工具都不满足「开源 + 本地桌面 + 可自接任意 LLM + 自主多步 VPS 运维」这个组合：
@@ -270,7 +284,7 @@ Agent 默认是一台「什么都会一点」的通用助手。真正干活时�
 
 Windows 用户直接下载安装即可，**无需安装 Node.js**：
 
-👉 **[下载 VPS Pilot v0.1.0 安装包](https://github.com/cainiao1907/vps-pilot/releases/latest)**
+👉 **[下载 VPS Pilot v0.1.1 安装包](https://github.com/cainiao1907/vps-pilot/releases/latest)**
 
 > ⚠️ 当前版本未做代码签名，Windows SmartScreen 可能提示「未知发布者」。
 > 点击「更多信息」→「仍要运行」即可。源码完全公开，可自行审查或从源码构建。
