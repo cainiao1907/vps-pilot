@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全问题（私下报告）
+    url: https://github.com/cainiao1907/vps-pilot/security/advisories/new
+    about: 发现安全漏洞请走这里私下报告，勿公开提交 Issue
+  - name: 使用问题与讨论
+    url: https://github.com/cainiao1907/vps-pilot/discussions
+    about: 使用疑问、经验分享、想法交流请到 Discussions
+  - name: 阅读文档
+    url: https://github.com/cainiao1907/vps-pilot#readme
+    about: 先看看 README，快速开始与常见问题都在这里

@@ -1,0 +1,107 @@
+name: Bug 报告
+description: 报告一个可复现的缺陷
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量填写完整，信息越全越容易定位问题。
+
+        > ⚠️ 安全漏洞请勿在此公开提交，请走 Security → Report a vulnerability 私下报告。
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索过现有 Issue，确认没有重复
+          required: true
+        - label: 我已阅读 README 的「快速开始」与「常见问题」
+          required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 问题描述
+      description: 清晰描述发生了什么，以及你期望发生什么
+      placeholder: |
+        期望：点击「连接」后正常建立 SSH 会话
+        实际：状态栏显示连接失败，终端无输出
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 一步步写清楚，越具体越好
+      placeholder: |
+        1. 添加一台主机，认证方式选「密码」
+        2. 点击「连接」
+        3. 观察到 ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 影响范围
+      description: 问题出现在哪个模块
+      options:
+        - SSH 连接 / 终端
+        - AI Agent
+        - MCP 服务
+        - SFTP 文件管理
+        - 危险命令风险引擎
+        - 模型 / BYOK 配置
+        - 代理 / 连接诊断
+        - 专家 / 技能
+        - 界面 / 其他
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: VPS Pilot 版本
+      description: 见「设置 → 关于」，或 package.json 的 version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      placeholder: "Windows 11 23H2 / macOS 14.5 / Ubuntu 22.04"
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js 版本
+      description: 命令行执行 `node -v` 获取
+      placeholder: "v22.22.2"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 报错信息
+      description: |
+        开发者工具（Ctrl+Shift+I）Console 的报错，或终端输出。
+        **请先脱敏**：删掉真实 IP、主机名、用户名、API Key 等敏感信息。
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 任何其他有助于定位的线索
+    validations:
+      required: false

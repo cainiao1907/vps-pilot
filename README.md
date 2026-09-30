@@ -1,6 +1,20 @@
 # VPS Pilot
 
+[![CI](https://github.com/cainiao1907/vps-pilot/actions/workflows/ci.yml/badge.svg)](https://github.com/cainiao1907/vps-pilot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#快速开始)
+[![Electron](https://img.shields.io/badge/Electron-33-47848F.svg?logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MCP](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io/)
+
+> **VPS Pilot** —— 本地运行的 AI Agent 驱动 VPS 远程运维客户端。
+> 一个开源、可自托管的 SSH 终端 + 自主运维 Agent，支持 BYOK 接入任意大模型。
+
 本地运行的 **AI Agent 驱动 VPS 远程运维客户端** —— 既是 SSH 终端工具，也是一个能理解自然语言、自主规划并执行运维任务的 AI Agent。
+
+**English**: VPS Pilot is an open-source, local-first AI agent for VPS remote operations — an SSH/SFTP terminal client with a built-in LLM agent that plans and executes server tasks. It supports bring-your-own-key (BYOK) for any OpenAI-compatible model, ships an MCP server so external agents can drive your terminal, and gates every command through a risk engine before execution. Think of it as an open-source, self-hostable alternative to Termius + an AI copilot that runs entirely on your machine.
+
+**关键词 / Keywords**: SSH 客户端 · VPS 管理面板 · AI 运维 Agent · 自然语言运维 · 自动化部署 · 危险命令拦截 · 服务器管理工具 · MCP Server · Model Context Protocol · Electron 桌面应用 · 多模型 BYOK · 跳板机 · SFTP · 代理隧道 · DevOps 自动化
 
 ## 为什么做这个
 
@@ -594,6 +608,57 @@ return { response: ok(id, { content, isError: failed }) };
 - 只有你配置的模型 API 会收到命令上下文（用于规划和总结），不向任何第三方上传服务器信息
 - 代理流量仅在你本机与代理服务器之间传输，代理地址与凭据不会离开本机
 
+## 常见问题
+
+**Q: 需要什么 API Key？可以用免费的吗？**
+
+任何 OpenAI 兼容接口都能接（DeepSeek / OpenAI / Anthropic / Kimi / 智谱 / 通义，或本地 Ollama）。BYOK，你自己的 Key，不经过任何中间服务器。
+
+**Q: 会把我服务器的密码上传到云端吗？**
+
+不会。凭据用系统级加密（Windows DPAPI / macOS Keychain）存在本地，明文永不落盘、永不出主进程。只有命令上下文（用于规划和总结）会发给你自己配置的模型 API。
+
+**Q: Agent 会乱执行危险命令吗？**
+
+不会。每条命令都过风险引擎三级判定：**硬拦截**（`rm -rf /` 等，无任何豁免）、**高危**（需你确认）、**只读**（自动放行）。默认审批模式是「计划一次性确认」。
+
+**Q: 支持哪些平台？**
+
+Windows / macOS / Linux。Windows 提供双击即用的批处理与安装包，开箱即用。
+
+**Q: 和 Termius、Kiro CLI、Chaterm 有什么区别？**
+
+见上文[「为什么做这个」](#为什么做这个)——核心差异是 **Agent 跑在你本地、开源可自托管、支持任意模型、每条命令都有安全闸门**。
+
+## Roadmap
+
+- [x] SSH/SFTP 客户端 · 多标签终端 · 跳板机 · 代理
+- [x] 本地 AI Agent（Plan-Execute 循环 + 逐条审批）
+- [x] 危险命令风险引擎（三级判定）
+- [x] MCP 服务（HTTP + stdio 转发）
+- [x] 专家（Persona）与技能（Skill）系统
+- [x] BYOK 多模型（OpenAI 兼容）
+- [ ] 主机分组与批量执行
+- [ ] 运维任务计划（定时 / 事件触发）
+- [ ] 团队协作与共享主机（加密同步）
+- [ ] 更多内置专家与技能模板
+
+> 有想要的功能？欢迎开 [Issue](https://github.com/cainiao1907/vps-pilot/issues) 或 [Discussion](https://github.com/cainiao1907/vps-pilot/discussions)。
+
+## 贡献
+
+欢迎任何形式的贡献！请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+- 报告缺陷 → [提交 Bug](https://github.com/cainiao1907/vps-pilot/issues/new?template=bug_report.yml)
+- 功能建议 → [提交 Feature](https://github.com/cainiao1907/vps-pilot/issues/new?template=feature_request.yml)
+- 提交代码 → Fork + PR，`npm run test:all` 需全绿
+- **安全漏洞请勿公开提交**，走 [Security Advisory](https://github.com/cainiao1907/vps-pilot/security/advisories/new) 私下报告
+
+## Star 趋势
+
+如果这个项目对你有帮助，欢迎点个 ⭐ Star 支持一下！
+
 ## License
 
 MIT
+
