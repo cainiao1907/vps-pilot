@@ -22,6 +22,13 @@ __pycache__/
 .vscode/*
 !.vscode/extensions.json
 
+# === 图标素材 ===
+# 保留 build/ 下的正式图标（icon.ico / icon-*.png，打包需要）
+# 排除设计稿与临时预览
+build/icon-drafts/
+build/icon-source-*.png
+build/_preview-*.png
+
 # === 安全：禁止入库的本地敏感内容 ===
 # 采集报告（含真实主机 IP / hostId / 服务器内部细节）
 reports/

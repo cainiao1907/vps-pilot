@@ -89,6 +89,7 @@ win:
     - target: nsis
       arch:
         - x64
+  icon: build/icon.ico
   artifactName: ${productName}-${version}-setup.${ext}
 
 nsis:
@@ -97,14 +98,19 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: VPS Pilot
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
 
 mac:
   target:
     - dmg
+  icon: build/icon-1024.png
   category: public.app-category.developer-tools
 
 linux:
   target:
     - AppImage
     - deb
+  icon: build/icon-512.png
   category: Development

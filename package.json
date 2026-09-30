@@ -1,6 +1,6 @@
 {
   "name": "vps-pilot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "VPS Pilot - 本地 AI Agent 驱动的 VPS 远程运维客户端",
   "main": "dist-electron/main/index.js",
   "author": "cainiao1907",
